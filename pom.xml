@@ -3,9 +3,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.zxl2014.problems</groupId>
+    <groupId>com.zxl.problems</groupId>
     <artifactId>problems-record-parent</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+    <modules>
+        <module>spring-always-assigns-default-value-to-Value-annotation</module>
+    </modules>
     <packaging>pom</packaging>
 
     <name>problems-record-parent</name>
