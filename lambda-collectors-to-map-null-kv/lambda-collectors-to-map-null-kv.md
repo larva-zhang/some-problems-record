@@ -23,7 +23,7 @@ accidUserIdMap = administratorList.stream().collect(Collectors.toMap(Administrat
                     administrator -> bridgeIdUserIdMap.get(administrator.getBridgeId())));
 ```
 
-# 解决过程
+# 寻因
 
 首先想到的是半年前将jdk版本升级到1
 .8后，ide提示有优化，就一键将原来的Guava库的Function写法转成lambda表达式，想着是否是这里的一键转换出了问题（肯定不是我的问题:)）。翻出git 
@@ -172,3 +172,10 @@ Hash table based implementation of the Map interface. This implementation provid
     }
 ```
 可以看到，``Collectors.toMap``在底层使用的是``Map::merge``方法，而``merge``方法不允许null value，无论该Map实例是否支持null value。
+
+# 解决
+
+找到原因了，那么如何解决呢？这个问题在stackoverflow上也有一篇帖子说明了如何fix这个问题<https://stackoverflow.com/questions/24630963/java-8-nullpointerexception-in-collectors-tomap>
+
+
+
