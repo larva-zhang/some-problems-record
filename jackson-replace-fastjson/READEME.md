@@ -4,7 +4,7 @@
 原因有以下几点：
 1. fastjson太过于侧重性能，对于部分高级特性支持不够，而且部分自定义特性完全偏离了json和js规范导致和其他框架不兼容；
 2. fastjson文档缺失较多，部分Feature甚至没有文档，而且代码缺少注释较为晦涩；
-3. fastjson bug较多，TestCase覆盖不够全面，尤其是近期连续爆出高危漏洞。
+3. fastjson的CVE bug监测较弱，很多CVE数据库网站上有关fastjson的CVE寥寥无几，例如近期的AutoType导致的高危漏洞，虽然和Jackson的PolymorphicDeserialization是同样的bug，但是CVE网站上几乎没有fastjson的bug报告。
 
 # 框架选型
 参考[mvnrepository json libraries](https://mvnrepository.com/open-source/json-libraries)，根据流行度排序后前十名框架：
@@ -25,6 +25,8 @@ jackson1是已经过时的框架，因此可以忽略，cheshire和json-simple�
 * [the ultimate json library json-simple vs gson vs jackson vs json](https://blog.overops.com/the-ultimate-json-library-json-simple-vs-gson-vs-jackson-vs-json/)
 
 在功能特性支持、稳定性、可扩展性、易用性以及社区活跃度上 jackson 和 gson 差不多，入门教程可以分别参考[baeldung jackson系列](https://www.baeldung.com/category/json/jackson/) 以及 [baeldung gson系列](https://www.baeldung.com/tag/gson/)。但是 spring 框架默认使用 jackson，因此最终我选择使用 jackson，因为可以减少依赖。
+
+PS: Jackson 2.10.0开始尝试基于新的API使用白名单机制来避免RCE漏洞，详见[https://github.com/FasterXML/jackson-databind/issues/2195](https://github.com/FasterXML/jackson-databind/issues/2195)，效果尚待观察。
 
 # 替换fastjson
 fastjson常见的使用场景就是序列化和反序列化，偶尔会有`JSONObject`和`JSONArray`实例的相关操作。
@@ -142,9 +144,9 @@ fastjson还会从环境变量中读取配置来修改`DEFAULT_PARSER_FEATURE`(�
 | 禁用特殊字符检查 | Feature.DisableSpecialKeyDetect | 关闭 | - | - | - | 
 | 使用对象数组而不是集合 | Feature.UseObjectArray | 关闭 | DeserializationFeature.USE_JAVA_ARRAY_FOR_JSON_ARRAY | 关闭 | 保持关闭 |
 | 支持解析没有setter方法的非public属性 | Feature.SupportNonPublicField | 关闭 | - | - | jaskson可以通过`ObjectMapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)`来达到相同的目的 |
-| 禁用fastjson的AUTOTYPE特性，即不按照json字符串中的`@type`自动选择反序列化类 | Feature.IgnoreAutoType | 关闭 | - | - | autotype是fastjson独有的特性，使用不当会导致安全漏洞，jackson并不支持 |
+| 禁用fastjson的AUTOTYPE特性，即不按照json字符串中的`@type`自动选择反序列化类 | Feature.IgnoreAutoType | 关闭 | - | - | jackson的[PolymorphicDeserialization](https://github.com/FasterXML/jackson-docs/wiki/JacksonPolymorphicDeserialization)默认是支持`Object.class`、`abstract classes`、`interfaces`属性的AUTO Type，但是该特性容易导致安全漏洞，强烈建议使用`ObjectMapper.disableDefaultTyping()`设置为只允许`@JsonTypeInfo`生效 |
 | 禁用属性智能匹配，例如下划线自动匹配驼峰等 | Feature.DisableFieldSmartMatch | 关闭 | - | - | jackson可以通过`ObjectMapper.setPropertyNamingStrategy()`达到相同的目的，但这种是针对一个json串的统一策略，如果要在一个json串中使用不同的策略则可以使用`@JsonProperty.value()`指定字段名 |
-| 启用fastjson的autotype功能，即根据json字符串中的`@type`自动选择反序列化的类 | Feature.SupportAutoType | 关闭 | - | - | autotype是fastjson独有的特性，使用不当会导致安全漏洞，jackson并不支持 | 
+| 启用fastjson的autotype功能，即根据json字符串中的`@type`自动选择反序列化的类 | Feature.SupportAutoType | 关闭 | ObjectMapper.DefaultTyping.* | 开启 | jackson的[PolymorphicDeserialization](https://github.com/FasterXML/jackson-docs/wiki/JacksonPolymorphicDeserialization)支持不同级别的AUTO TYPE，但是这个功能容易导致安全漏洞，强烈建议使用`ObjectMapper.disableDefaultTyping()`设置为只允许`@JsonTypeInfo`生效 | 
 | 解析时将未用引号包含的json字段名作为String类型存储，否则只能用原始类型获取key的值。例如`String text="{123:\"abc\"}"`在启用了`NonStringKeyAsString`后可以通过`JSON.parseObject(text).getString("123")`的方式获取到`"abc"`，而在不启用`NonStringKeyAsString`时，`JSON.parseObject(text).getString("123")`只能得到`null`，必须通过`JSON.parseObject(text).get(123)`的方式才能获取到`"abc"`。| Feature.NonStringKeyAsString | 关闭 | - | - | 非标准特性，jackson并不支持 | 
 | 自定义`"{\"key\":value}"`解析成`Map`实例，否则解析为`JSONObject` | Feature.CustomMapDeserializer | 关闭 | - | - | jackson没有相应的全局特性，但是可以通过`TypeReference`达到相同的效果 | 
 | 枚举未匹配到时抛出异常，否则解析为`null` | Feature.ErrorOnEnumNotMatch | 关闭 | DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL | 关闭 | fastjson默认解析为`null`，jackson则相反，默认会抛异常，建议采用jackson默认行为 | 
@@ -235,12 +237,12 @@ fastjson还会从环境变量中读取配置来修改`DEFAULT_GENERATE_FEATURE`(
 | 序列化时，如果未指定`order`，则将field按照`getter`方法的字典顺序排序 | SerializerFeature.SortField | 开启 | MapperFeature.SORT_PROPERTIES_ALPHABETICALLY | 关闭 | 建议关闭，排序会影响序列化性能（fastjson在反序列化时支持按照field顺序读取解析，因此排序后的json串有利于提高fastjson的解析性能，但jackson并没有该特性） |
 | 把`\t`做转义输出，**已废弃，即使开启也无效** | SerializerFeature.WriteTabAsSpecial | 关闭 | - | - | - |
 | 格式化json输出 | SerializerFeature.PrettyFormat | 关闭 | SerializationFeature.INDENT_OUTPUT | 关闭 | 建议保持关闭，格式化可以交给前端完成 |
-| 序列化时把类型名称写入json | SerializerFeature.WriteClassName | 关闭 | - | - | 该特性是为fastjson特有的auto type特性做支撑，jackson并无相应特性 |
+| 序列化时把类型名称写入json | SerializerFeature.WriteClassName | 关闭 | - | - | jackson可以通过`@JsonTypeInfo`达到类似的效果，参见[Jackson Annotation Examples](https://www.baeldung.com/jackson-annotations) |
 | 序列化时消除对同一对象循环引用的问题 | SerializerFeature.DisableCircularReferenceDetect | 关闭 | SerializationFeature.FAIL_ON_SELF_REFERENCES | 开启 | 保持开启，避免循环引用 |
 | 对斜杠'/'进行转义 | SerializerFeature.WriteSlashAsSpecial | 关闭 | - | - | jackson可以通过自定义`Serializer`实现相同效果，按需设置 |
 | 将中文都会序列化为`\uXXXX`格式，字节数会多一些，但是能兼容IE 6 | SerializerFeature.BrowserCompatible | 关闭 | - | - | jackson可以通过自定义`Serializer`实现相同效果，按需设置 |
 | 全局修改日期格式，默认使用`JSON.DEFFAULT_DATE_FORMAT` | SerializerFeature.WriteDateUseDateFormat | 关闭 | - | - | jackson可以通过`@JsonFormat.pattern()`、`ObjectMapper.setDateFormat()`等方式实现相同效果 |
-| 序列化时不把最外层的类型名称写入json | SerializerFeature.NotWriteRootClassName | 关闭 | - | - | 该特性是为fastjson特有的auto type特性做支撑，jackson并无相应特性 |
+| 序列化时不把最外层的类型名称写入json | SerializerFeature.NotWriteRootClassName | 关闭 | - | - | jackson可以通过`@JsonRootName`达到类似的效果，参见[Jackson Annotation Examples](https://www.baeldung.com/jackson-annotations) |
 | 不转义特殊字符，**已废弃，即使开启也无效** | SerializerFeature.DisableCheckSpecialChar | 关闭 | - | - | - |
 | 将Bean序列化时将field值按顺序当成json数组输出，而不是json object，同时不会输出fieldName，例如：`{"id":123,"name":"xxx"}`会输出成`[123,"xxx"]` | SerializerFeature.BeanToArray | 关闭 | - | - | 非标准特性，jackson并不支持 |
 | 序列化Map时将非String类型的key作为String类型输出，例如：`{123:231}`会输出成`{"123":231}` | SerializerFeature.WriteNonStringKeyAsString | 关闭 | - | - | 非标准特性，jackson并不支持 |
