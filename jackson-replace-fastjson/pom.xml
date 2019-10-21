@@ -8,6 +8,14 @@
     <artifactId>jackson-replace-fastjson</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <properties>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <java.version>1.8</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+    </properties>
+
     <dependencyManagement>
         <dependencies>
             <!-- https://mvnrepository.com/artifact/com.fasterxml.jackson/jackson-bom -->
