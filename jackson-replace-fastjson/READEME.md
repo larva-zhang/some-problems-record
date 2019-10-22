@@ -24,7 +24,7 @@ jackson1是已经过时的框架，因此可以忽略，cheshire和json-simple�
 * [JSON in Java](https://www.baeldung.com/java-json)
 * [the ultimate json library json-simple vs gson vs jackson vs json](https://blog.overops.com/the-ultimate-json-library-json-simple-vs-gson-vs-jackson-vs-json/)
 
-在功能特性支持、稳定性、可扩展性、易用性以及社区活跃度上 jackson 和 gson 差不多，入门教程可以分别参考[baeldung jackson系列](https://www.baeldung.com/category/json/jackson/) 以及 [baeldung gson系列](https://www.baeldung.com/tag/gson/)。但是 spring 框架默认使用 jackson，因此最终我选择使用 jackson，因为可以减少依赖。
+在功能特性支持、稳定性、可扩展性、易用性以及社区活跃度上 jackson 和 gson 差不多，入门教程可以分别参考[baeldung jackson系列](https://www.baeldung.com/category/json/jackson/) 以及 [baeldung gson系列](https://www.baeldung.com/tag/gson/)。但是jackson有更多现成的类库兼容支持例如`jackson-datatype-commons-lang3`，以及更丰富的输出数据格式支持例如`jackson-dataformat-yaml`，而且spring框架默认使用jackson，因此最终我选择使用jackson。
 
 PS: Jackson 2.10.0开始尝试基于新的API使用白名单机制来避免RCE漏洞，详见[https://github.com/FasterXML/jackson-databind/issues/2195](https://github.com/FasterXML/jackson-databind/issues/2195)，效果尚待观察。
 
