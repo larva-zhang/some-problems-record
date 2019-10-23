@@ -15,6 +15,7 @@
 * fastjson
 * cheshire
 * json-simple
+
 ![](https://img2018.cnblogs.com/blog/464089/201909/464089-20190918180822511-317652641.png)
  
 jackson1是已经过时的框架，因此可以忽略，cheshire和json-simple排名尚且不如fastjson，也忽略，剩余jackson2、gson以及org.json，其中org.json的使用量(usage)远小于jackson2(方便起见，下文均以jackson均指代jackson2)和gson，因此org.json也可以排除了。
@@ -130,7 +131,7 @@ fastjson还会从环境变量中读取配置来修改`DEFAULT_PARSER_FEATURE`(�
 | 允许json字符串中带注释 | Feature.AllowComment | 关闭 | JsonParser.Feature.ALLOW_COMMENTS | 关闭 | 根据系统的json数据情况开启 |
 | 允许json字段名不被引号包括起来 | Feature.AllowUnQuotedFieldNames | 开启 | JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES | 关闭 | 根据系统的json数据情况开启 |
 | 允许json字段名使用单引号包括起来 | Feature.AllowSingleQuotes | 开启 | JsonParser.Feature.ALLOW_SINGLE_QUOTES | 关闭 | 根据系统的json数据情况开启 |
-| 将json字段名作为字面量缓存起来，即`fieldName.intern()` | Feature.InternFieldNames | 开启 | - | - | jackson不支持该特性，会影响内存占用以及解析速度，但影响不大 |
+| 将json字段名作为字面量缓存起来，即`fieldName.intern()` | Feature.InternFieldNames | 开启 | - | - | jackson默认使用`InternCache`缓存了PropertyName |
 | 识别ISO8601格式的日期字符串，例如：`2018-05-31T19:13:42.000Z`或`2018-05-31T19:13:42.000+07:00` | Feature.AllowISO8601DateFormat | 关闭 | - | - | jackson默认支持ISO8601格式日期字符串的解析，并且也可以通过`ObjectMapper.setDateFormat`指定解析格式 |
 | 忽略json中包含的连续的多个逗号，非标准特性 | Feature.AllowArbitraryCommas | 关闭 | - | - | jackson不支持该特性，且该特性是非标准特性，因此可以忽略 |
 | 将json中的浮点数解析成BigDecimal对象，禁用后会解析成Double对象 | Feature.UseBigDecimal | 开启 | DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS | 关闭 | 建议开启 |
@@ -257,11 +258,166 @@ fastjson还会从环境变量中读取配置来修改`DEFAULT_GENERATE_FEATURE`(
 序列化fastjson和jackson的特性TestCase见[SerializationUseJacksonReplaceFastJsonTest.java](https://github.com/zhanghan0031/some-problems-record/blob/master/jackson-replace-fastjson/src/test/java/com/zxl/problems/SerializationUseJacksonReplaceFastJsonTest.java)
 
 ## Annotation
+fastjsonzhu相对于jackson来说注解的功能划分的并没有那么细，因此fastjson的一个注解可能等价于jackson多个注解的组合。
 
-## JSONObject & JSONArray
+### `@JSONPOJOBuilder`
+指定反序列化时创建java对象使用的build方法，对应jackson的`@JsonPOJOBuilder`。
+
+### `@JSONCreator`
+指定反序列化时创建java对象使用的构造方法，对应jackson的`@JsonCreator`。
+
+### `@JSONField`
+指定序列化和反序列化field时的行为。反序列化时，等价于`@JsonProperty` + `@JsonDeserialize` + `@JsonUnwrapped` + `@JsonFormat`+ `@JsonAlias`；
+序列化时，等价于`@JsonProperty` + `@JsonSerialize` + `@JsonUnwrapped` + `@JsonFormat` + `@JsonRawValue` + `@JsonView`。
+
+```java
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
+public @interface JSONField {
+    // 序列化和反序列化时的字段顺序，等价于jackson的@JsonProperty.index()
+    int ordinal() default 0;
+
+    // 序列化和反序列化时的字段名称映射，等价于jackson的@JsonProperty.value()
+    String name() default "";
+
+    // 序列化和反序列化时的数据格式（日期格式、16进制等等），等价于jackson的@JsonFormat.shape() + @JsonFormat.pattern()
+    String format() default "";
+
+    // 字段是否序列化，等价于jackson的@JsonProperty.access()
+    boolean serialize() default true;
+
+    // 字段是否反序列化，等价于jackson的@JsonProperty.access()
+    boolean deserialize() default true;
+
+    // 序列化特性，等价于jackson的@JsonProperty.with()
+    SerializerFeature[] serialzeFeatures() default {};
+
+    // 反序列化特性，等价于jackson的@JsonFormat.with()
+    Feature[] parseFeatures() default {};
+    
+    // 对属性进行打标，便于在序列化时进行exclude或include，等价于jackson的@JsonView
+    String label() default "";
+    
+    // 序列化时将字段内容直接输出，不经过转义，等价于jackson的@JsonRawValue
+    boolean jsonDirect() default false;
+    
+    // 指定序列化时使用的Serializer Class，等价于jackson的@JsonSerialize
+    Class<?> serializeUsing() default Void.class;
+    
+    // 指定反序列化时使用的Deserializer Class，等价于jackson的@JsonDeserialize
+    Class<?> deserializeUsing() default Void.class;
+
+    // 指定反序列化时使用的字段别名，等价于jackson的@JsonAlias
+    String[] alternateNames() default {};
+
+    // 将字段的子属性映射到父节点上，等价于jackson的@JsonUnwrapped
+    boolean unwrapped() default false;
+    
+    // 指定序列化时字段为null时使用的默认值，等价于jackson的@JsonProperty.defaultValue()
+    String defaultValue() default "";
+}
+```
+`unwrapped`的用法可以参考[AnnotationUseJacksonReplaceFastJsonTest.java](https://github.com/zhanghan0031/some-problems-record/blob/master/jackson-replace-fastjson/src/test/java/com/zxl/problems/AnnotationUseJacksonReplaceFastJsonTest.java)中的`testJSONFieldUnwrapped`。
+
+### `@JSONType`
+指定序列化和反序列化一个Java Bean时的行为。
+
+```java
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ ElementType.TYPE })
+public @interface JSONType {
+
+    // 是否使用asm优化，jackson无对应特性
+    boolean asm() default true;
+
+    // 序列化和反序列化时的field排序，等价于jackson的@JsonPropertyOrder.value()
+    String[] orders() default {};
+
+    // 序列化和反序列化时包含的field，等价于jackson的
+    String[] includes() default {};
+
+    // 序列化和反序列化时忽略的field，等价于jackson的@JsonIgnoreProperties
+    String[] ignores() default {};
+
+    // 序列化特性，等价于jackson的@JsonProperty.with()
+    SerializerFeature[] serialzeFeatures() default {};
+    
+    // 反序列化特性，等价于jackson的@JsonFormat.with()
+    Feature[] parseFeatures() default {};
+    
+    // 序列化时是否依据field字母顺序排序，等价于jackson的@JsonPropertyOrder.alphabetic()
+    boolean alphabetic() default true;
+    
+    // 
+    Class<?> mappingTo() default Void.class;
+    
+    // 反序列化时指定java bean builder类(必须是@JSONPOJOBuilder注解的类)，等价于jackson的@JsonDeserialize.builder()
+    Class<?> builder() default Void.class;
+    
+    // 
+    String typeName() default "";
+
+    //
+    String typeKey() default "";
+    
+    //
+    Class<?>[] seeAlso() default{};
+    
+    // 指定序列化时使用的Serializer Class，等价于jackson的@JsonSerialize
+    Class<?> serializer() default Void.class;
+    
+    // 指定反序列化时使用的Deserializer Class，等价于jackson的@JsonDeserialize
+    Class<?> deserializer() default Void.class;
+
+    // 
+    boolean serializeEnumAsJavaBean() default false;
+
+    // 指定json和Java bean之间的字段名称映射策略，等价于jackson的@JsonNaming
+    PropertyNamingStrategy naming() default PropertyNamingStrategy.CamelCase;
+
+    // 
+    Class<? extends SerializeFilter>[] serialzeFilters() default {};
+}
+```
+
+## `JSONObject` & `JSONArray`
+
+首先来看看fastjon中`JSONObject`和`JSONArray`的源码： 
+```java
+public class JSONObject extends JSON implements Map<String, Object>, Cloneable, Serializable, InvocationHandler {
+
+    private final Map<String, Object> map;
+    ...
+}
+```
+```java
+public class JSONArray extends JSON implements List<Object>, Cloneable, RandomAccess, Serializable {
+
+    private static final long  serialVersionUID = 1L;
+    private final List<Object> list;
+    protected transient Object relatedArray;
+    protected transient Type   componentType;
+    ...
+}
+```
+从源码就可以发现，`JSONObject`实际是一个`Map<String, Object>`，而`JSONArray`实际是一个`List<JSONObject>`。因此可以将`JSONObject`类型改为`Map<String, Object>`，而`JSONArray`类型改为`List<Object>`。
+但是这种方式就会导致上层API出现大量修改，因为缺少了`JSONObject`和`JSONArray`提供的多种便利的类型转换方法。如果想要暂时保留`JSONObject`和`JSONArray`，此时可以采取一种取巧的方法。
+
+### 暂时保留`JSONObject & `JSONArray`的过渡方法
+jackson官方提供了对`org.json`库的数据类型支持`jackson-datatype-json-org`，因此可以将`com.alibaba.fastjson.JSONObject`替换为`org.json.JSONObject`，
+`com.alibaba.fastjson.JSONArray`替换为`org.json.JSONArray`，这两个类库的对象API大致相同，当然一些细小的改动还是避免不了的。
+如果想完全不改上层代码，那也可以参考[jackson-datatype-json-org](https://github.com/FasterXML/jackson-datatype-json-org)和
+[jackson-datatype-json-lib](https://github.com/swquinn/jackson-datatype-json-lib)自己实现jackson对fastjson的数据类型的binder。
+
+## JSONPath
+使用[Jayway JsonPath](https://github.com/json-path/JsonPath)就能轻松替换fastjson的JSONPath，而且功能比fastjson更强大。
+只需参考[JsonProvider SPI](https://github.com/json-path/JsonPath#jsonprovider-spi)使用`JacksonJsonProvider`替代[Jayway JsonPath](https://github.com/json-path/JsonPath)默认的`JsonSmartJsonProvider`即可。
+
+
 
 # 参考文档
 * [Jackson快速替换Fastjson之道](https://blog.csdn.net/hujkay/article/details/97040048)
 * [fastjson Features 说明](https://blog.csdn.net/xiaoliuliu2050/article/details/82356934)
 * [fastjson SerializerFeatures 说明](https://blog.csdn.net/zjkyx888/article/details/78673898)
+* [fastjson JSONField 说明](https://www.w3cschool.cn/fastjson/fastjson-jsonfield.html)
 * [Jackson – Decide What Fields Get Serialized/Deserialized](https://www.baeldung.com/jackson-field-serializable-deserializable-or-not)
