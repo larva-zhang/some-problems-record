@@ -403,19 +403,46 @@ public class JSONArray extends JSON implements List<Object>, Cloneable, RandomAc
 从源码就可以发现，`JSONObject`实际是一个`Map<String, Object>`，而`JSONArray`实际是一个`List<JSONObject>`。因此可以将`JSONObject`类型改为`Map<String, Object>`，而`JSONArray`类型改为`List<Object>`。
 但是这种方式就会导致上层API出现大量修改，因为缺少了`JSONObject`和`JSONArray`提供的多种便利的类型转换方法。如果想要暂时保留`JSONObject`和`JSONArray`，此时可以采取一种取巧的方法。
 
-### 暂时保留`JSONObject & `JSONArray`的过渡方法
+### 暂时保留`JSONObject` & `JSONArray`的过渡方法
 jackson官方提供了对`org.json`库的数据类型支持`jackson-datatype-json-org`，因此可以将`com.alibaba.fastjson.JSONObject`替换为`org.json.JSONObject`，
 `com.alibaba.fastjson.JSONArray`替换为`org.json.JSONArray`，这两个类库的对象API大致相同，当然一些细小的改动还是避免不了的。
 如果想完全不改上层代码，那也可以参考[jackson-datatype-json-org](https://github.com/FasterXML/jackson-datatype-json-org)和
 [jackson-datatype-json-lib](https://github.com/swquinn/jackson-datatype-json-lib)自己实现jackson对fastjson的数据类型的binder。
 
 ## JSONPath
-使用[Jayway JsonPath](https://github.com/json-path/JsonPath)就能轻松替换fastjson的JSONPath，而且功能比fastjson更强大。
-只需参考[JsonProvider SPI](https://github.com/json-path/JsonPath#jsonprovider-spi)使用`JacksonJsonProvider`替代[Jayway JsonPath](https://github.com/json-path/JsonPath)默认的`JsonSmartJsonProvider`即可。
+使用[json-path/JsonPath](https://github.com/json-path/JsonPath)就能轻松替换fastjson的JSONPath，而且功能比fastjson更强大。
+只需参考[JsonProvider SPI](https://github.com/json-path/JsonPath#jsonprovider-spi)使用`JacksonJsonProvider`替代[json-path/JsonPath](https://github.com/json-path/JsonPath)默认的`JsonSmartJsonProvider`即可。
 
+## 自定义扩展
+
+### 自定义Deserializer
+fastjson中实现自定义Deserializer的方法通常是实现`ObjectDeserializer`接口的`deserialze`方法
+```java
+<T> T deserialze(DefaultJSONParser parser, Type type, Object fieldName);
+```
+在jackson中实现自定义Serializer的方法则通常是继承`StdDeserializer`抽象类，重写`deserialize`方法
+```java
+public abstract T deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException;
+```
+
+### 自定义Serializer
+fastjson中实现自定义Serializer的方法通常是实现`ObjectSerializer`接口的`write`方法
+```java
+void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType, int features) throws IOException;
+```
+在jackson中实现自定义Serializer的方法则通常是继承`StdSerializer`抽象类，重写`serialize`方法
+```java
+public abstract void serialize(T value, JsonGenerator gen, SerializerProvider serializers) throws IOException;
+```
+
+### 自定义Serialize Filter
+fastjson中提供了6种`SerializeFilter`，详见[fastjson/wiki/SerializeFilter](https://github.com/alibaba/fastjson/wiki/SerializeFilter)。
+而在jackson中则是建议继承`SimpleBeanPropertyFilter`。
 
 
 # 参考文档
+* [alibaba/fastjson](https://github.com/alibaba/fastjson)
+* [FasterXML/jackson](https://github.com/FasterXML/jackson)
 * [Jackson快速替换Fastjson之道](https://blog.csdn.net/hujkay/article/details/97040048)
 * [fastjson Features 说明](https://blog.csdn.net/xiaoliuliu2050/article/details/82356934)
 * [fastjson SerializerFeatures 说明](https://blog.csdn.net/zjkyx888/article/details/78673898)
