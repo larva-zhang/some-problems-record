@@ -348,19 +348,19 @@ public @interface JSONType {
     // 序列化时是否依据field字母顺序排序，等价于jackson的@JsonPropertyOrder.alphabetic()
     boolean alphabetic() default true;
     
-    // 
+    // 反序列化多态类型时，如果根据其他typeName等方式无法找到正确的子类时，默认使用的子类，等价于jackson的@JsonTypeInfo.defaultImpl()
     Class<?> mappingTo() default Void.class;
     
     // 反序列化时指定java bean builder类(必须是@JSONPOJOBuilder注解的类)，等价于jackson的@JsonDeserialize.builder()
     Class<?> builder() default Void.class;
     
-    // 
+    // 声明这个类型的别名，反序列化多态类型时使用，等价于jackson的@JsonTypeName
     String typeName() default "";
 
-    //
+    // 反序列化某个接口或抽象类或父类的子类时指定根据哪个字段的值和子类的typeName相等来决定具体实现类，等价于jackson的@JsonTypeInfo.use() = Id.CUSTOM + @JsonTypeInfo.property()
     String typeKey() default "";
     
-    //
+    // 反序列化某个接口或抽象类或父类的子类时指定可以反序列化的子类类型，等价于jackson的@JsonSubTypes
     Class<?>[] seeAlso() default{};
     
     // 指定序列化时使用的Serializer Class，等价于jackson的@JsonSerialize
@@ -369,13 +369,13 @@ public @interface JSONType {
     // 指定反序列化时使用的Deserializer Class，等价于jackson的@JsonDeserialize
     Class<?> deserializer() default Void.class;
 
-    // 
+    // 序列化时，如果filed是枚举类型，则和普通的java bean一样输出枚举的filed，而不是通常使用的Enum.name()值，jackson没有对应特性
     boolean serializeEnumAsJavaBean() default false;
 
     // 指定json和Java bean之间的字段名称映射策略，等价于jackson的@JsonNaming
     PropertyNamingStrategy naming() default PropertyNamingStrategy.CamelCase;
 
-    // 
+    // 指定序列化时使用的Serialize filter，等价于jackson的@JsonFilter
     Class<? extends SerializeFilter>[] serialzeFilters() default {};
 }
 ```
