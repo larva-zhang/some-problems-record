@@ -409,6 +409,8 @@ jackson官方提供了对`org.json`库的数据类型支持`jackson-datatype-jso
 如果想完全不改上层代码，那也可以参考[jackson-datatype-json-org](https://github.com/FasterXML/jackson-datatype-json-org)和
 [jackson-datatype-json-lib](https://github.com/swquinn/jackson-datatype-json-lib)自己实现jackson对fastjson的数据类型的binder。
 
+> [larva-zhang/jackson-datatype-fastjson](https://github.com/larva-zhang/jackson-datatype-fastjson)欢迎大家使用或提issues。
+
 ## JSONPath
 使用[json-path/JsonPath](https://github.com/json-path/JsonPath)就能轻松替换fastjson的JSONPath，而且功能比fastjson更强大。
 只需参考[JsonProvider SPI](https://github.com/json-path/JsonPath#jsonprovider-spi)使用`JacksonJsonProvider`替代[json-path/JsonPath](https://github.com/json-path/JsonPath)默认的`JsonSmartJsonProvider`即可。
