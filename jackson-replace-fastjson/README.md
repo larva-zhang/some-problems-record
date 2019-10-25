@@ -152,7 +152,7 @@ fastjson还会从环境变量中读取配置来修改`DEFAULT_PARSER_FEATURE`(�
 | 自定义`"{\"key\":value}"`解析成`Map`实例，否则解析为`JSONObject` | Feature.CustomMapDeserializer | 关闭 | - | - | jackson没有相应的全局特性，但是可以通过`TypeReference`达到相同的效果 | 
 | 枚举未匹配到时抛出异常，否则解析为`null` | Feature.ErrorOnEnumNotMatch | 关闭 | DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL | 关闭 | fastjson默认解析为`null`，jackson则相反，默认会抛异常，建议采用jackson默认行为 | 
 
-反序列化fastjson和jackson的特性TestCase见[DeserializationUseJacksonReplaceFastJsonTest.java](https://github.com/zhanghan0031/some-problems-record/blob/master/jackson-replace-fastjson/src/test/java/com/zxl/problems/DeserializationUseJacksonReplaceFastJsonTest.java)
+反序列化fastjson和jackson的特性TestCase见[DeserializationUseJacksonReplaceFastJsonTest.java](https://github.com/larva-zhang/some-problems-record/blob/master/jackson-replace-fastjson/src/test/java/com/zxl/problems/DeserializationUseJacksonReplaceFastJsonTest.java)
 
 
 ## Serialization
@@ -255,7 +255,7 @@ fastjson还会从环境变量中读取配置来修改`DEFAULT_GENERATE_FEATURE`(
 | 序列化时将BigDecimal使用toPlainString()输出 | SerializerFeature.WriteBigDecimalAsPlain | 关闭 | JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN | 关闭 | 按需开启 |
 | 序列化时对Map按照Key进行排序 | SerializerFeature.MapSortField | 关闭 | SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS | 关闭 | 建议关闭，开启会影响性能 | 
 
-序列化fastjson和jackson的特性TestCase见[SerializationUseJacksonReplaceFastJsonTest.java](https://github.com/zhanghan0031/some-problems-record/blob/master/jackson-replace-fastjson/src/test/java/com/zxl/problems/SerializationUseJacksonReplaceFastJsonTest.java)
+序列化fastjson和jackson的特性TestCase见[SerializationUseJacksonReplaceFastJsonTest.java](https://github.com/larva-zhang/some-problems-record/blob/master/jackson-replace-fastjson/src/test/java/com/zxl/problems/SerializationUseJacksonReplaceFastJsonTest.java)
 
 ## Annotation
 fastjsonzhu相对于jackson来说注解的功能划分的并没有那么细，因此fastjson的一个注解可能等价于jackson多个注解的组合。
@@ -317,7 +317,7 @@ public @interface JSONField {
     String defaultValue() default "";
 }
 ```
-`unwrapped`的用法可以参考[AnnotationUseJacksonReplaceFastJsonTest.java](https://github.com/zhanghan0031/some-problems-record/blob/master/jackson-replace-fastjson/src/test/java/com/zxl/problems/AnnotationUseJacksonReplaceFastJsonTest.java)中的`testJSONFieldUnwrapped`。
+`unwrapped`的用法可以参考[AnnotationUseJacksonReplaceFastJsonTest.java](https://github.com/larva-zhang/some-problems-record/blob/master/jackson-replace-fastjson/src/test/java/com/zxl/problems/AnnotationUseJacksonReplaceFastJsonTest.java)中的`testJSONFieldUnwrapped`。
 
 ### `@JSONType`
 指定序列化和反序列化一个Java Bean时的行为。
