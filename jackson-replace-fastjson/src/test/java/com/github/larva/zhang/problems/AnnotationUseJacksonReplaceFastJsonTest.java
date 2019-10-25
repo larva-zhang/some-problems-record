@@ -1,4 +1,4 @@
-package com.zxl.problems;
+package com.github.larva.zhang.problems;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.junit.Assert;

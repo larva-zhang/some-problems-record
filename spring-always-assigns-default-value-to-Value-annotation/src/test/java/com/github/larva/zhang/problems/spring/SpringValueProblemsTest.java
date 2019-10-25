@@ -1,4 +1,4 @@
-package com.zxl.problems.spring;
+package com.github.larva.zhang.problems.spring;
 
 import org.junit.Assert;
 import org.junit.Test;

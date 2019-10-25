@@ -1,4 +1,4 @@
-package com.zxl.problems;
+package com.github.larva.zhang.problems;
 
 import org.junit.Assert;
 import org.junit.Test;
