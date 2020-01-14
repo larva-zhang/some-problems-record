@@ -1,6 +1,6 @@
 # 背景
 工作中偶尔会碰到需要统一修改SQL的情况，例如有以下表结构:
-```mysql
+```sql
 CREATE TABLE `test_user` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `account` varchar(70) NOT NULL COMMENT '账号',
@@ -14,7 +14,7 @@ CREATE TABLE `test_user` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='用户信息表';
 ```
 假设有如下Mapper SQL：
-```mysql
+```sql
 insert into `test_user`(`account`, `user_name`, `age`, `sex`, `create_time`)
 values ('test1', 'test_user_1', 1, 0, now())
 on duplicate key update 
@@ -72,9 +72,6 @@ Druid提供了Filter机制来修改SQL，例如[EncodingConvertFilter](https://g
 Demo地址为 [mybatis-plugin-or-druid-filter-rewrite-sql](https://github.com/larva-zhang/some-problems-record/tree/master/mybatis-plugin-or-druid-filter-rewrite-sql)。
 
 在Demo中使用了H2模拟Mysql，H2的建表语句参考[`src/test/resources/schema-h2.sql`](https://github.com/larva-zhang/some-problems-record/blob/master/mybatis-plugin-or-druid-filter-rewrite-sql/src/test/resources/schema-h2.sql)。
-
-## Druid Visitor
-不论使用的是Mybatis Plugin还是Druid Filter，
 
 ## Mybatis plugin
 
